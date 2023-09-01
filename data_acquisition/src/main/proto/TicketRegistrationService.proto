@@ -1,0 +1,77 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package br.com.rformagio.grpc.server.grpcserver;
+
+import "google/protobuf/timestamp.proto";  // Импорт Timestamp
+
+// Определение объектов системы
+
+message Ticket {
+  string number = 1;              // Номер талона
+  google.protobuf.Timestamp registration_time = 2; // Дата и время регистрации
+  Status status = 3;              // Статус талона
+
+}
+
+message Session {
+  google.protobuf.Timestamp entry_time = 1;  // Дата и время входа
+  SessionStatus status = 2;  // Статус сессии
+
+  enum SessionStatus {
+    IDLE = 0;       // Простой
+    CALL = 1;       // Вызов
+    SERVE = 2;      // Обслуживание
+  }
+}
+
+// Определение сервисов системы
+
+service RegistrationService {
+  rpc RegisterTicket(RegisterTicketRequest) returns (RegisterTicketResponse);
+}
+
+message RegisterTicketRequest {
+  string number = 1;            // Идентификатор пользователя
+  int64 registration_time = 2; // Дата и время регистрации
+  Status status = 3;
+
+}
+
+enum Status {
+  WAITING = 0;   // Ожидает
+  CALLING = 1;   // Вызывается
+  SERVING = 2;   // Обслуживается
+  SERVED = 3;    // Обслужен
+}// Запрошенная услуга
+
+message RegisterTicketResponse {
+  string number = 1;            // Идентификатор пользователя
+  int64 registration_time = 2; // Дата и время регистрации
+  Status status = 3;
+}
+
+service DataRetrievalService {
+  rpc ReceiveTicket(ReceiveTicketRequest) returns (ReceiveTicketResponse);
+}
+
+message ReceiveTicketRequest {
+  string ticket_number = 1;
+}
+
+message ReceiveTicketResponse {
+  string ticket_number = 1;
+}
+
+service QueueDistributionService {
+  rpc DistributeTicket(DistributeTicketRequest) returns (DistributeTicketResponse);
+}
+
+message DistributeTicketRequest {
+  string ticket_number = 1; // Номер зарегистрированного талона
+}
+
+message DistributeTicketResponse {
+  string ticket_number = 1;    // Номер распределенного талона
+  string operator_id = 2;      // Идентификатор оператора, к которому распределен талон
+  google.protobuf.Timestamp distribution_time = 3;  // Дата и время распределения
+}
