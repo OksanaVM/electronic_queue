@@ -26,8 +26,8 @@ public class KafkaConsumerService {
 
     @KafkaListener(topics = "ticket", groupId = "my-group")
     public void listen(String message) {
-        Ticket ticket = convertJsonToTicket(message);
         log.info("Received message: " + message);
+        Ticket ticket = convertJsonToTicket(message);
         Optional<Session> session = sessionRepository.findFirstBySessionStatus(SessionStatus.FREE);
          if(session.isPresent()){
              ticket.setSession(session.get());

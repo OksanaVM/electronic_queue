@@ -25,7 +25,7 @@ public class Session {
     private SessionStatus sessionStatus;
     @OneToOne
     @JoinTable(name = "TICKET_SESSION",
-            joinColumns = @JoinColumn(name = "ticket_number"),
-            inverseJoinColumns = @JoinColumn(name = "session_id"))
+            joinColumns = @JoinColumn(name = "session_id"),
+            inverseJoinColumns = @JoinColumn(name = "ticket_number"))
     private Ticket ticket;
 }

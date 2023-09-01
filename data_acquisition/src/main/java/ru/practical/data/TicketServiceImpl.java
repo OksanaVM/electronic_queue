@@ -6,18 +6,16 @@ import br.com.rformagio.grpc.server.grpcserver.RegistrationServiceGrpc;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.grpc.stub.StreamObserver;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lognet.springboot.grpc.GRpcService;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ru.practical.data.entity.Ticket;
 import ru.practical.data.repository.TicketRepository;
 import ru.practical.data.transform.TicketTransform;
 
 
-@RequiredArgsConstructor
+
 @GRpcService
 @Slf4j
 public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServiceImplBase{
@@ -25,13 +23,22 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
     private final TicketRepository ticketRepository;
 
     private final TicketTransform ticketTransform;
-    @Autowired
-    private KafkaProducerService kafkaProducerService; // Внедряем сервис для отправки данных в Kafka
 
-    @Value("${kafka.topic.ticket}") // Имя темы Kafka для билетов из конфигурационного файла
-    private String ticketKafkaTopic;
+    private final KafkaProducerService kafkaProducerService; // Внедряем сервис для отправки данных в Kafka
+
+    private final String ticketKafkaTopic;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public TicketServiceImpl(TicketRepository ticketRepository, TicketTransform ticketTransform,
+                             KafkaProducerService kafkaProducerService,
+                             @Value("${kafka.topic.ticket}")String ticketKafkaTopic) {
+        this.ticketRepository = ticketRepository;
+        this.ticketTransform = ticketTransform;
+        this.kafkaProducerService = kafkaProducerService;
+        this.ticketKafkaTopic = ticketKafkaTopic;
+    }
+
     @Override
     public void registerTicket(RegisterTicketRequest request,
                                StreamObserver<RegisterTicketResponse> responseObserver) {
@@ -40,9 +47,12 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
         ticketRepository.save(ticket);
 
         // Отправляем информацию о билете в Kafka
-        String ticketMessage = transformTicketToJson(ticket); // Предположим, что есть метод для преобразования билета в JSON
-        kafkaProducerService.sendMessage(ticketKafkaTopic, ticketMessage);
-        responseObserver.onNext(ticketTransform.transformToResponse(ticket));
+        log.info("kafkaProducerService");// Предположим, что есть метод для преобразования билета в JSON
+        kafkaProducerService.sendMessage(ticketKafkaTopic, ticket);
+        log.info("sendMessage");
+        RegisterTicketResponse registerTicketResponse = ticketTransform.transformToResponse(ticket);
+        log.info("transformToResponse(ticket)");
+        responseObserver.onNext(registerTicketResponse);
         responseObserver.onCompleted();
     }
 
@@ -50,6 +60,7 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
         try {
             return objectMapper.writeValueAsString(ticket);
         } catch (JsonProcessingException e) {
+            log.error("transformTicketToJson: "+e);
             throw new RuntimeException("Error serializing Ticket object to JSON", e);
         }
     }
