@@ -1,4 +1,4 @@
-package ru.practical.work;
+package ru.practical.work.service;
 
 import br.com.rformagio.grpc.server.grpcserver.RegisterTicketRequest;
 import br.com.rformagio.grpc.server.grpcserver.RegisterTicketResponse;
@@ -11,6 +11,7 @@ import org.lognet.springboot.grpc.GRpcService;
 
 import org.springframework.beans.factory.annotation.Value;
 import ru.practical.work.entity.Ticket;
+import ru.practical.work.kafka.KafkaProducerService;
 import ru.practical.work.repository.TicketRepository;
 import ru.practical.work.transform.TicketTransform;
 
