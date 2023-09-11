@@ -1,5 +1,6 @@
 package ru.practical.work.config;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,13 +18,10 @@ import java.util.Map;
 
 @Configuration
 @Component
+@RequiredArgsConstructor
 public class KafkaProducerSessionConfig {
-
-    private final String bootstrapServers;
-
-    public KafkaProducerSessionConfig(@Value("${spring.kafka.producer.bootstrap-servers}") String bootstrapServers) {
-        this.bootstrapServers = bootstrapServers;
-    }
+    @Value("${spring.kafka.producer.bootstrap-servers}")
+    private String bootstrapServers;
 
     @Bean
     public ProducerFactory<String, Session> producerFactory() {

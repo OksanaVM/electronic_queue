@@ -6,11 +6,11 @@ import ru.practical.work.entity.Session;
 @Component
 public class SessionDtoMapper {
 
-    public SessionDto toDto(Session session){
+    public SessionDto toDtoSession(Session session) {
         return new SessionDto(session.getId(), session.getStartDate(), session.getSessionStatus());
     }
 
-    public Session toEntity(SessionDto dto) {
+    public Session toEntitySession(SessionDto dto) {
         return new Session(dto.getId(), dto.getStartDate(), dto.getSessionStatus());
     }
 }

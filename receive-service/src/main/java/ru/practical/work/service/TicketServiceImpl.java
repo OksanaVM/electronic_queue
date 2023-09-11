@@ -1,20 +1,24 @@
 package ru.practical.work.service;
 
 import io.grpc.stub.StreamObserver;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practical.work.entity.Ticket;
 import ru.practical.work.kafka.KafkaProducerService;
+import ru.practical.work.mapper.TicketMapper;
 import ru.practical.work.proto.RegisterTicketRequest;
 import ru.practical.work.proto.RegisterTicketResponse;
 import ru.practical.work.proto.RegistrationServiceGrpc;
 import ru.practical.work.repository.TicketRepository;
-import ru.practical.work.mapper.TicketMapper;
 
-
-@GRpcService
+@Component
 @Slf4j
+@GRpcService
+@RequiredArgsConstructor
 public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServiceImplBase {
 
     private final TicketRepository ticketRepository;
@@ -23,18 +27,11 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
 
     private final KafkaProducerService kafkaProducerService;
 
-    private final String ticketKafkaTopic;
+    @Value("${kafka.topic.ticket}")
+    private String ticketKafkaTopic;
 
 
-    public TicketServiceImpl(TicketRepository ticketRepository, TicketMapper ticketMapper,
-                             KafkaProducerService kafkaProducerService,
-                             @Value("${kafka.topic.ticket}") String ticketKafkaTopic) {
-        this.ticketRepository = ticketRepository;
-        this.ticketMapper = ticketMapper;
-        this.kafkaProducerService = kafkaProducerService;
-        this.ticketKafkaTopic = ticketKafkaTopic;
-    }
-
+    @Transactional
     @Override
     public void registerTicket(RegisterTicketRequest request,
                                StreamObserver<RegisterTicketResponse> responseObserver) {

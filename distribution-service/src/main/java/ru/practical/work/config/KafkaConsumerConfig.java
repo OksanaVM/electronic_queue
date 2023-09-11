@@ -1,5 +1,6 @@
 package ru.practical.work.config;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,15 +17,10 @@ import java.util.Map;
 
 @Configuration
 @Component
+@RequiredArgsConstructor
 public class KafkaConsumerConfig {
-
-    private final String bootstrapServers;
-
-
-    public KafkaConsumerConfig(@Value("${spring.kafka.consumer.bootstrap-servers}")String bootstrapServers) {
-        this.bootstrapServers = bootstrapServers;
-    }
-
+    @Value("${spring.kafka.consumer.bootstrap-servers}")
+    private String bootstrapServers;
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Ticket> kafkaListenerContainerFactory() {

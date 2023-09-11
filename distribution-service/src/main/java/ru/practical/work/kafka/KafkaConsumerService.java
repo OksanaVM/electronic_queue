@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import ru.practical.work.entity.Session;
@@ -13,8 +12,6 @@ import ru.practical.work.entity.enums.SessionStatus;
 import ru.practical.work.entity.enums.State;
 import ru.practical.work.repository.SessionRepository;
 import ru.practical.work.repository.TicketRepository;
-
-import java.util.Optional;
 
 
 @RequiredArgsConstructor
@@ -30,33 +27,34 @@ public class KafkaConsumerService {
     public void listen(String message) {
         log.info("Received ticket: " + message);
         Ticket ticket = convertJsonToTicket(message);
-        Optional<Session> session = sessionRepository.findFirstBySessionStatus(SessionStatus.FREE);
-         if(session.isPresent()){
-             Session session1 = session.get();
-             session1.setSessionStatus(SessionStatus.CALL);
-             sessionRepository.save(session1);
 
-             ticket.setSession(session1);
-             ticket.setState(State.CALLING);
-             ticketRepository.save(ticket);
-         }
+        sessionRepository.findFirstBySessionStatus(SessionStatus.FREE)
+                .ifPresent(session1 -> {
+                    session1.setSessionStatus(SessionStatus.CALL);
+                    sessionRepository.save(session1);
+
+                    ticket.setSession(session1);
+                    ticket.setState(State.CALLING);
+                    ticketRepository.save(ticket);
+                });
     }
 
     @KafkaListener(topics = "queue-distribution-topic", groupId = "my-group")
     public void listenSession(String message) {
         log.info("Received session: " + message);
         Session session = convertJsonToSession(message);
-        Optional<Ticket> ticket = ticketRepository.findFirstByState(State.WAITING);
-        if(ticket.isPresent()){
-            Ticket ticket1 = ticket.get();
-            ticket1.setState(State.CALLING);
-            ticketRepository.save(ticket1);
 
-            session.setSessionStatus(SessionStatus.CALL);
-            session.setTicket(ticket1);
-            sessionRepository.save(session);
-        }
+        ticketRepository.findFirstByState(State.WAITING)
+                .ifPresent(ticket1 -> {
+                    ticket1.setState(State.CALLING);
+                    ticketRepository.save(ticket1);
+
+                    session.setSessionStatus(SessionStatus.CALL);
+                    session.setTicket(ticket1);
+                    sessionRepository.save(session);
+                });
     }
+
 
     private Ticket convertJsonToTicket(String message) {
         try {

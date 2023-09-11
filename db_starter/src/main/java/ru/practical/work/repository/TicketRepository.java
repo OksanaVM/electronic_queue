@@ -13,4 +13,5 @@ import java.util.UUID;
 public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     Optional<Ticket> findFirstByState(State state);
 
+    Optional<Ticket> findFirstByStateOrderByNumberAsc(State state);
 }

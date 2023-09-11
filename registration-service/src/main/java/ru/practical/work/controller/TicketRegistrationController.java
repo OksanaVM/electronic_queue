@@ -1,58 +1,46 @@
 package ru.practical.work.controller;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practical.work.config.GrpcClientProvider;
 import ru.practical.work.dto.TicketDto;
 import ru.practical.work.dto.enums.State;
+import ru.practical.work.mapper.TicketMapper;
 import ru.practical.work.proto.RegisterTicketRequest;
 import ru.practical.work.proto.RegisterTicketResponse;
 import ru.practical.work.proto.RegistrationServiceGrpc;
-import ru.practical.work.mapper.TicketMapper;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 
-
 @RestController
 @Component
+@AllArgsConstructor
 public class TicketRegistrationController {
-    private final TicketMapper ticketMapper;
+    private TicketMapper ticketMapper;
 
-    private final String grpcServerHost;
-    private final int grpcServerPort;
-
-    public TicketRegistrationController(TicketMapper ticketMapper,
-                                        @Value("${grpc.server.host}")String grpcServerHost,
-                                        @Value("${grpc.server.port}")int grpcServerPort) {
-        this.ticketMapper = ticketMapper;
-        this.grpcServerHost = grpcServerHost;
-        this.grpcServerPort = grpcServerPort;
-    }
+    private GrpcClientProvider grpcClientProvider;
 
 
     @PostMapping("/register/ticket")
     public ResponseEntity<TicketDto> registerTicket() {
         TicketDto ticketDto = new TicketDto(UUID.randomUUID(), LocalDateTime.now(), State.WAITING);
-
         RegisterTicketRequest grpcRequest = ticketMapper.transformToRequest(ticketDto);
+        try {
+            RegistrationServiceGrpc.RegistrationServiceBlockingStub registrationClient =
+                    RegistrationServiceGrpc.newBlockingStub(grpcClientProvider.getChannel());
 
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(grpcServerHost, grpcServerPort)
-                .usePlaintext()
-                .build();
+            RegisterTicketResponse grpcResponse = registrationClient.registerTicket(grpcRequest);
 
-        RegistrationServiceGrpc.RegistrationServiceBlockingStub registrationClient =
-                RegistrationServiceGrpc.newBlockingStub(channel);
-
-        RegisterTicketResponse grpcResponse = registrationClient.registerTicket(grpcRequest);
-
-
-        return ResponseEntity.ok(ticketMapper.transformToEntityResponse(grpcResponse));
+            return ResponseEntity.ok(ticketMapper.transformToEntityResponse(grpcResponse));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 }
