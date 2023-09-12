@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>ru.practical.work</groupId>
 	<artifactId>electronic_queue</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.7-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>electronic_queue</name>
 	<description>Demo project for Spring Boot</description>

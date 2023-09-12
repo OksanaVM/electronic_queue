@@ -9,6 +9,7 @@ import ru.practical.work.entity.Session;
 import ru.practical.work.entity.Ticket;
 import ru.practical.work.entity.enums.SessionStatus;
 import ru.practical.work.entity.enums.State;
+import ru.practical.work.exeption.BadRequestException;
 import ru.practical.work.exeption.NotFoundException;
 import ru.practical.work.kafka.KafkaProducerService;
 import ru.practical.work.repository.SessionRepository;
@@ -32,29 +33,42 @@ public class TicketServiceImpl {
     @Transactional
     public Ticket callTicket() {
         Optional<Ticket> optionalTicket = ticketRepository.findFirstByStateOrderByNumberAsc(State.WAITING);
-
         if (optionalTicket.isPresent()) {
             Ticket ticket = optionalTicket.get();
-            ticket.setState(State.CALLING);
-            ticketRepository.save(ticket);
-            return ticket;
+            Session session = ticket.getSession();
+            if (ticket.getState() == State.WAITING) {
+               if (session != null && session.getSessionStatus() == SessionStatus.FREE) {
+
+                    ticket.setState(State.CALLING);
+                    session.setSessionStatus(SessionStatus.CALL);
+
+                    ticketRepository.save(ticket);
+
+                    return ticket;
+                } else {
+                    throw new BadRequestException("Session is not available for FREE");
+                }
+            } else {
+                throw new BadRequestException("Ticket is not available for CALLING");
+            }
         } else {
             throw new NotFoundException("No available tickets");
         }
     }
 
+
     @Transactional
     public Ticket setNewStatus(UUID id) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Ticket not found for id: " + id));
+                .orElseThrow(() -> new BadRequestException("Ticket not found for id: " + id));
 
         Session session = ticket.getSession();
         if (session == null) {
-            throw new IllegalArgumentException("Session is null for session id: " + id);
+            throw new BadRequestException("Session is null for session id: " + id);
         }
 
         if (ticket.getState() != State.CALLING) {
-            throw new IllegalArgumentException("Ticket is not in CALLING state");
+            throw new BadRequestException("Ticket is not in CALLING state");
         }
         session.setSessionStatus(SessionStatus.SERVICE);
         sessionRepository.save(session);
@@ -69,14 +83,14 @@ public class TicketServiceImpl {
                 .orElseThrow(() -> new NotFoundException("Ticket not found for id: " + id));
 
         if (ticket.getState() != State.SERVICING) {
-            throw new IllegalArgumentException("Ticket is not in SERVICING state");
+            throw new BadRequestException("Ticket is not in SERVICING state");
         }
 
         Session session = ticket.getSession();
         if (session == null || session.getSessionStatus() != SessionStatus.SERVICE) {
-            throw new IllegalArgumentException("Invalid Session state for the Ticket");
+            throw new BadRequestException("Invalid Session state for the Ticket");
         }
-
+        ticket.setSession(null);
         session.setSessionStatus(SessionStatus.FREE);
         sessionRepository.save(session);
         ticket.setState(State.SERVICED);

@@ -17,4 +17,10 @@ public class ErrorHandler {
         return new ErrorResponse(exception.getMessage());
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequestException(BadRequestException exception) {
+        log.debug("Получен статус 400 BAD_REQUEST {}", exception.getMessage(), exception);
+        return new ErrorResponse(exception.getMessage());
+    }
 }

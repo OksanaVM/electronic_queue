@@ -1,5 +1,7 @@
 package ru.practical.work.controller;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,9 +30,10 @@ public class TicketRegistrationController {
 
 
     @PostMapping("/register/ticket")
-    public ResponseEntity<TicketDto> registerTicket() {
+    public ResponseEntity<?> registerTicket() {
         TicketDto ticketDto = new TicketDto(UUID.randomUUID(), LocalDateTime.now(), State.WAITING);
         RegisterTicketRequest grpcRequest = ticketMapper.transformToRequest(ticketDto);
+
         try {
             RegistrationServiceGrpc.RegistrationServiceBlockingStub registrationClient =
                     RegistrationServiceGrpc.newBlockingStub(grpcClientProvider.getChannel());
@@ -38,8 +41,14 @@ public class TicketRegistrationController {
             RegisterTicketResponse grpcResponse = registrationClient.registerTicket(grpcRequest);
 
             return ResponseEntity.ok(ticketMapper.transformToEntityResponse(grpcResponse));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus() == Status.INVALID_ARGUMENT) {
+                return ResponseEntity.badRequest().body("Неверный аргумент запроса");
+            } else if (e.getStatus() == Status.NOT_FOUND) {
+                return ResponseEntity.notFound().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
         }
     }
 
