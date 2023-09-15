@@ -38,18 +38,15 @@ public class TicketServiceImpl {
             Session session = ticket.getSession();
             if (ticket.getState() == State.WAITING) {
                if (session != null && session.getSessionStatus() == SessionStatus.FREE) {
-
                     ticket.setState(State.CALLING);
                     session.setSessionStatus(SessionStatus.CALL);
-
                     ticketRepository.save(ticket);
-
                     return ticket;
                 } else {
-                    throw new BadRequestException("Session is not available for FREE");
+                    throw new BadRequestException("Session is not FREE");
                 }
             } else {
-                throw new BadRequestException("Ticket is not available for CALLING");
+                throw new BadRequestException("Ticket is not WAITING");
             }
         } else {
             throw new NotFoundException("No available tickets");
@@ -64,7 +61,7 @@ public class TicketServiceImpl {
 
         Session session = ticket.getSession();
         if (session == null) {
-            throw new BadRequestException("Session is null for session id: " + id);
+            throw new BadRequestException("Session is null for ticket id: " + id);
         }
 
         if (ticket.getState() != State.CALLING) {
@@ -95,14 +92,8 @@ public class TicketServiceImpl {
         sessionRepository.save(session);
         ticket.setState(State.SERVICED);
         ticketRepository.save(ticket);
-        saveSession(session);
-
+        kafkaProducerService.sendMessage(ticketKafkaTopic, session);
         return ticket;
     }
 
-    public Session saveSession(Session session) {
-        Session newSession = sessionRepository.save(session);
-        kafkaProducerService.sendMessage(ticketKafkaTopic, session);
-        return newSession;
-    }
 }

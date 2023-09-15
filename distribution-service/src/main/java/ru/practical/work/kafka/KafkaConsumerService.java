@@ -24,16 +24,15 @@ public class KafkaConsumerService {
 
 
     @KafkaListener(topics = "ticket", groupId = "my-group")
-    public void listen(String message) {
+    public void listenTicket(String message) {
         log.info("Received ticket: " + message);
         Ticket ticket = convertJsonToTicket(message);
 
         sessionRepository.findFirstBySessionStatus(SessionStatus.FREE)
-                .ifPresent(session1 -> {
-                    session1.setSessionStatus(SessionStatus.CALL);
-                    sessionRepository.save(session1);
-
-                    ticket.setSession(session1);
+                .ifPresent(callSession -> {
+                    callSession.setSessionStatus(SessionStatus.CALL);
+                    sessionRepository.save(callSession);
+                    ticket.setSession(callSession);
                     ticket.setState(State.CALLING);
                     ticketRepository.save(ticket);
                 });
@@ -45,12 +44,12 @@ public class KafkaConsumerService {
         Session session = convertJsonToSession(message);
 
         ticketRepository.findFirstByState(State.WAITING)
-                .ifPresent(ticket1 -> {
-                    ticket1.setState(State.CALLING);
-                    ticketRepository.save(ticket1);
-
+                .ifPresent(callTicket -> {
+                    callTicket.setState(State.CALLING);
+                    callTicket.setSession(session);
+                    ticketRepository.save(callTicket);
+                    session.setTicket(callTicket);
                     session.setSessionStatus(SessionStatus.CALL);
-                    session.setTicket(ticket1);
                     sessionRepository.save(session);
                 });
     }
