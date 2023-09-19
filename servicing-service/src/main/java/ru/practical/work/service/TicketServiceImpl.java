@@ -11,6 +11,7 @@ import ru.practical.work.dbone.entity.Ticket;
 import ru.practical.work.dbone.entity.TicketHistory;
 import ru.practical.work.dbone.entity.enums.SessionStatus;
 import ru.practical.work.dbone.entity.enums.State;
+import ru.practical.work.dbone.repository.SessionRepository;
 import ru.practical.work.dbone.repository.TicketHistoryRepository;
 import ru.practical.work.dbone.repository.TicketRepository;
 import ru.practical.work.dbtwo.entity.OldTicket;
@@ -18,10 +19,6 @@ import ru.practical.work.dbtwo.repository.OldTicketRepository;
 import ru.practical.work.exeption.BadRequestException;
 import ru.practical.work.exeption.NotFoundException;
 import ru.practical.work.kafka.KafkaProducerService;
-import ru.practical.work.dbone.repository.SessionRepository;
-
-
-
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -54,7 +51,7 @@ public class TicketServiceImpl {
                 if (session != null) {
                     ticket.setState(State.CALLING);
                     session.setSessionStatus(SessionStatus.CALL);
-                    saveVersion(ticket);
+                    saveTicketHistory(ticket);
                     ticketRepository.save(ticket);
                     ticket.setSession(session);
                     session.setTicket(ticket);
@@ -87,7 +84,7 @@ public class TicketServiceImpl {
         session.setSessionStatus(SessionStatus.SERVICE);
         sessionRepository.save(session);
         ticket.setState(State.SERVICING);
-        saveVersion(ticket);
+        saveTicketHistory(ticket);
         ticketRepository.save(ticket);
         return ticket;
     }
@@ -109,7 +106,7 @@ public class TicketServiceImpl {
         session.setSessionStatus(SessionStatus.FREE);
         sessionRepository.save(session);
         ticket.setState(State.SERVICED);
-        saveVersion(ticket);
+        saveTicketHistory(ticket);
         ticketRepository.save(ticket);
         oldTicketSave(ticket.getNumber());
         ticketRepository.deleteById(ticket.getNumber());
@@ -122,13 +119,14 @@ public class TicketServiceImpl {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Ticket not found for id: " + id));
         if (ticket.getState() == State.SERVICED) {
-            OldTicket oldTicket =  new OldTicket(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
+            OldTicket oldTicket = new OldTicket(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
                     LocalDateTime.now());
             oldTicketRepository.save(oldTicket);
         }
     }
 
-    public void saveVersion(Ticket ticket) {
+
+    private void saveTicketHistory(Ticket ticket) {
         TicketHistory ticketHistory = new TicketHistory(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
                 LocalDateTime.now());
         ticketHistoryRepository.save(ticketHistory);

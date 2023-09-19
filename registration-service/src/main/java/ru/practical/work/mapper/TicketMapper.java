@@ -7,8 +7,6 @@ import ru.practical.work.proto.RegisterTicketRequest;
 import ru.practical.work.proto.RegisterTicketResponse;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @RequiredArgsConstructor

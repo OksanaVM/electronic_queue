@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -21,15 +23,15 @@ import javax.sql.DataSource;
         basePackages = "ru.practical.work.dbtwo.repository")
 public class PersistenceDbTwoConfiguration {
 
-    @Bean(name="dbtwoDataSource")
+    @Bean(name = "dbtwoDataSource")
     @Primary
-    @ConfigurationProperties(prefix="spring.dbtwo.datasource")
+    @ConfigurationProperties(prefix = "spring.dbtwo.datasource")
     public DataSource dbtwoDataSource() {
         return DataSourceBuilder.create().build();
     }
 
     @Primary
-    @Bean(name="dbtwoEntityManager")
+    @Bean(name = "dbtwoEntityManager")
     public LocalContainerEntityManagerFactoryBean dbtwoEntityManager(EntityManagerFactoryBuilder builder,
                                                                      @Qualifier("dbtwoDataSource") DataSource accountDataSource) {
         return builder

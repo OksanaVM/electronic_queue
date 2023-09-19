@@ -10,24 +10,24 @@ import ru.practical.work.dbone.entity.enums.State;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter
-@Getter
-@Entity
-@Table(name = "old_ticket")
-public class OldTicket {
+@Table(name = "old_ticket_history")
+public class OldTicketHistory {
     @Id
-    private UUID id;
-
+    @Column(name = "version")
+    private UUID version;
     @Column(name = "ticket_number")
-    private UUID ticket_number;
-
+    private UUID ticketNumber;
     @Column(name = "ticket_state")
     @Enumerated(EnumType.STRING)
     private State ticketState;
 
-    @Column(name = "ticket_start")
+    @Column(name = "ticket_start_state")
     private LocalDateTime ticketStart;
+
 
 }

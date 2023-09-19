@@ -46,7 +46,7 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
                                StreamObserver<RegisterTicketResponse> responseObserver) {
         log.info("registerTicket");
         Ticket ticket = ticketMapper.transformToEntityRequest(request);
-        saveVersion(ticket);
+        saveTicketHistory(ticket);
         ticketRepository.save(ticket);
         log.info("kafkaProducerService");
         kafkaProducerService.sendMessage(ticketKafkaTopic, ticket);
@@ -57,7 +57,7 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
         responseObserver.onCompleted();
     }
 
-    public void saveVersion(Ticket ticket) {
+    private void saveTicketHistory(Ticket ticket) {
         TicketHistory ticketHistory = new TicketHistory(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
                 LocalDateTime.now());
         ticketHistoryRepository.save(ticketHistory);

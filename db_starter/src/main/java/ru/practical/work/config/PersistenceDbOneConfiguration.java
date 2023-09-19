@@ -20,27 +20,27 @@ import javax.sql.DataSource;
 @EnableJpaRepositories(
         entityManagerFactoryRef = "dboneEntityManagerFactory",
         transactionManagerRef = "dboneTransactionManager",
-        basePackages = { "ru.practical.work.dbone.repository" }
+        basePackages = {"ru.practical.work.dbone.repository"}
 )
 public class PersistenceDbOneConfiguration {
 
-    @Bean(name="dboneDataSource")
-    @ConfigurationProperties(prefix="spring.dbone.datasource")
+    @Bean(name = "dboneDataSource")
+    @ConfigurationProperties(prefix = "spring.dbone.datasource")
     public DataSource dboneDataSource() {
         return DataSourceBuilder.create().build();
     }
 
-    @Bean(name="dboneEntityManagerFactory")
-        public LocalContainerEntityManagerFactoryBean dboneEntityManager(
-                EntityManagerFactoryBuilder builder,
-                @Qualifier("dboneDataSource") DataSource dboneDataSource){
-            return builder
-                    .dataSource(dboneDataSource)
-                    .packages("ru.practical.work.dbone.entity")
-                    .build();
+    @Bean(name = "dboneEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean dboneEntityManager(
+            EntityManagerFactoryBuilder builder,
+            @Qualifier("dboneDataSource") DataSource dboneDataSource) {
+        return builder
+                .dataSource(dboneDataSource)
+                .packages("ru.practical.work.dbone.entity")
+                .build();
     }
 
-    @Bean(name="dboneTransactionManager")
+    @Bean(name = "dboneTransactionManager")
     public PlatformTransactionManager dboneTransactionManager(
             @Qualifier("dboneEntityManagerFactory") EntityManagerFactory dboneEntityManagerFactory) {
         return new JpaTransactionManager(dboneEntityManagerFactory);
