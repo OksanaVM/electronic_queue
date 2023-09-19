@@ -1,4 +1,4 @@
-package ru.practical.work.entity.enums;
+package ru.practical.work.dbone.entity.enums;
 
 public enum SessionStatus {
     FREE,

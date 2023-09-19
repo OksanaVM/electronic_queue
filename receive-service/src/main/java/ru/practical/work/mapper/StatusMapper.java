@@ -2,7 +2,7 @@ package ru.practical.work.mapper;
 
 
 import org.springframework.stereotype.Service;
-import ru.practical.work.entity.enums.State;
+import ru.practical.work.dbone.entity.enums.State;
 import ru.practical.work.proto.Status;
 
 @Service

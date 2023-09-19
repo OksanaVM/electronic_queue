@@ -11,7 +11,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.stereotype.Component;
-import ru.practical.work.entity.Ticket;
+import ru.practical.work.dbone.entity.Ticket;
 
 import java.util.HashMap;
 import java.util.Map;

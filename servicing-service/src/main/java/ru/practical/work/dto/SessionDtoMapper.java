@@ -1,7 +1,7 @@
 package ru.practical.work.dto;
 
 import org.springframework.stereotype.Component;
-import ru.practical.work.entity.Session;
+import ru.practical.work.dbone.entity.Session;
 
 @Component
 public class SessionDtoMapper {

@@ -1,7 +1,7 @@
 package ru.practical.work.dto;
 
 import org.springframework.stereotype.Component;
-import ru.practical.work.entity.Ticket;
+import ru.practical.work.dbone.entity.Ticket;
 
 @Component
 public class TicketDtoMapper {

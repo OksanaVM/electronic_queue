@@ -1,47 +1,46 @@
-package ru.practical.work.entity;
+package ru.practical.work.dbone.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.practical.work.entity.enums.State;
+import ru.practical.work.dbone.entity.enums.SessionStatus;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Table(name = "TICKET")
-public class Ticket {
+@Table(name = "SESSION")
+public class Session {
     @Id
-    private UUID number;
-    @Column(name = "registration_date")
+    private UUID id;
+    @Column(name = "start_date")
     @JsonSerialize(converter = LocalDateTimeSerializer.class)
     @JsonDeserialize(converter = LocalDateTimeDeserializer.class)
-    private LocalDateTime registrationDate;
+    private LocalDateTime startDate;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "state")
-    private State state;
+    @Column(name = "session_status")
+    private SessionStatus sessionStatus;
     @OneToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     @JoinTable(name = "TICKET_SESSION",
-            joinColumns = @JoinColumn(name = "ticket_number"),
-            inverseJoinColumns = @JoinColumn(name = "session_id"))
-    private Session session;
+            joinColumns = @JoinColumn(name = "session_id"),
+            inverseJoinColumns = @JoinColumn(name = "ticket_number"))
+    private Ticket ticket;
 
-    public Ticket(UUID number, LocalDateTime registrationDate, State state) {
-        this.number = number;
-        this.registrationDate = registrationDate;
-        this.state = state;
+    public Session(UUID id, LocalDateTime startDate, SessionStatus sessionStatus) {
+        this.id = id;
+        this.startDate = startDate;
+        this.sessionStatus = sessionStatus;
     }
-}
 
+}

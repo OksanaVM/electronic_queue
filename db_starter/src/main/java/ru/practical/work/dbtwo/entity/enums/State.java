@@ -1,4 +1,4 @@
-package ru.practical.work.entity.enums;
+package ru.practical.work.dbtwo.entity.enums;
 
 public enum State {
     WAITING, //ожидает

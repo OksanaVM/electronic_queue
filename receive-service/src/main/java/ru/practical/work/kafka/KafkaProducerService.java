@@ -2,7 +2,7 @@ package ru.practical.work.kafka;
 
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import ru.practical.work.entity.Ticket;
+import ru.practical.work.dbone.entity.Ticket;
 
 @Service
 public class KafkaProducerService {

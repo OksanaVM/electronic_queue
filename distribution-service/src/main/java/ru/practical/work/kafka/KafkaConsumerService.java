@@ -6,19 +6,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import ru.practical.work.entity.Session;
-import ru.practical.work.entity.Ticket;
-import ru.practical.work.entity.enums.SessionStatus;
-import ru.practical.work.entity.enums.State;
-import ru.practical.work.repository.SessionRepository;
-import ru.practical.work.repository.TicketRepository;
+
+import ru.practical.work.dbone.entity.Session;
+import ru.practical.work.dbone.entity.Ticket;
+import ru.practical.work.dbone.entity.enums.SessionStatus;
+import ru.practical.work.dbone.entity.enums.State;
+import ru.practical.work.dbone.repository.SessionRepository;
+
+import ru.practical.work.dbone.repository.TicketRepositoryService;
 
 
 @RequiredArgsConstructor
 @Slf4j
 @Service
 public class KafkaConsumerService {
-    private final TicketRepository ticketRepository;
+    private final TicketRepositoryService ticketRepository;
     private final SessionRepository sessionRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -53,7 +55,6 @@ public class KafkaConsumerService {
                     sessionRepository.save(session);
                 });
     }
-
 
     private Ticket convertJsonToTicket(String message) {
         try {

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practical.work.dto.SessionDto;
 import ru.practical.work.dto.SessionDtoMapper;
-import ru.practical.work.entity.Session;
+import ru.practical.work.dbone.entity.Session;
 import ru.practical.work.service.SessionServiceImpl;
 
 @RestController

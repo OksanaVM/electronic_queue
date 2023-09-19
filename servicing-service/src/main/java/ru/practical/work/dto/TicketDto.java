@@ -2,7 +2,7 @@ package ru.practical.work.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import ru.practical.work.entity.enums.State;
+import ru.practical.work.dbone.entity.enums.State;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

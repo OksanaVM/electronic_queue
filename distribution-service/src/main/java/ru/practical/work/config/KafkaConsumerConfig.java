@@ -10,7 +10,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.stereotype.Component;
-import ru.practical.work.entity.Ticket;
+import ru.practical.work.dbone.entity.Ticket;
 
 import java.util.HashMap;
 import java.util.Map;

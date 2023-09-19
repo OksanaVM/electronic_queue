@@ -1,4 +1,4 @@
-package ru.practical.work.entity;
+package ru.practical.work.dbone.entity;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
 

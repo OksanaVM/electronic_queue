@@ -7,6 +7,8 @@ import ru.practical.work.proto.RegisterTicketRequest;
 import ru.practical.work.proto.RegisterTicketResponse;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -20,9 +22,11 @@ public class TicketMapper {
     }
 
     public RegisterTicketRequest transformToRequest(TicketDto ticketDto) {
+//        ZonedDateTime zdt = ZonedDateTime.of(ticketDto.getRegistrationDate(), ZoneId.systemDefault());
+//        long date = zdt.toInstant().toEpochMilli();
         return RegisterTicketRequest.newBuilder()
                 .setNumber(ticketDto.getNumber().toString())
-                .setRegistrationTime(ticketDto.getRegistrationDate().getNano())
+                .setRegistrationTime(ticketDto.getRegistrationDate().toString())
                 .setStatus(statusMapper.transformToStatus(ticketDto.getState()))
                 .build();
     }

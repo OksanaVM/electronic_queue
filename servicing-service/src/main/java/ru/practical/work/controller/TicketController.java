@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practical.work.dto.TicketDto;
 import ru.practical.work.dto.TicketDtoMapper;
-import ru.practical.work.entity.Ticket;
+import ru.practical.work.dbone.entity.Ticket;
 import ru.practical.work.service.TicketServiceImpl;
 
 import java.util.UUID;

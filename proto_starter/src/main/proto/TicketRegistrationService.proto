@@ -2,24 +2,24 @@ syntax = "proto3";
 option java_multiple_files = true;
 package ru.practical.work.proto;
 
-import "google/protobuf/timestamp.proto";  // Импорт Timestamp
-message Ticket {
-  string number = 1;
-  google.protobuf.Timestamp registration_time = 2;
-  Status status = 3;
+//import "google/protobuf/timestamp.proto";  // Импорт Timestamp
+//message Ticket {
+//  string number = 1;
+//  google.protobuf.Timestamp registration_time = 2;
+//  Status status = 3;
+//
+//}
 
-}
-
-message Session {
-  google.protobuf.Timestamp entry_time = 1;
-  SessionStatus status = 2;
-
-  enum SessionStatus {
-    IDLE = 0;
-    CALL = 1;
-    SERVE = 2;
-  }
-}
+//message Session {
+//  google.protobuf.Timestamp entry_time = 1;
+//  SessionStatus status = 2;
+//
+//  enum SessionStatus {
+//    IDLE = 0;
+//    CALL = 1;
+//    SERVE = 2;
+//  }
+//}
 
 service RegistrationService {
   rpc RegisterTicket(RegisterTicketRequest) returns (RegisterTicketResponse);
@@ -27,7 +27,7 @@ service RegistrationService {
 
 message RegisterTicketRequest {
   string number = 1;
-  int64 registration_time = 2;
+  string registration_time = 2;
   Status status = 3;
 
 }
@@ -41,7 +41,7 @@ enum Status {
 
 message RegisterTicketResponse {
   string number = 1;
-  int64 registration_time = 2;
+  string registration_time = 2;
   Status status = 3;
 }
 

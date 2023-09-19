@@ -1,19 +1,22 @@
 package ru.practical.work.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practical.work.entity.Session;
-import ru.practical.work.entity.Ticket;
-import ru.practical.work.entity.enums.SessionStatus;
-import ru.practical.work.entity.enums.State;
+import ru.practical.work.dbone.entity.Session;
+import ru.practical.work.dbone.entity.Ticket;
+import ru.practical.work.dbone.entity.enums.SessionStatus;
+import ru.practical.work.dbone.entity.enums.State;
 import ru.practical.work.exeption.BadRequestException;
 import ru.practical.work.exeption.NotFoundException;
 import ru.practical.work.kafka.KafkaProducerService;
-import ru.practical.work.repository.SessionRepository;
-import ru.practical.work.repository.TicketRepository;
+import ru.practical.work.dbone.repository.SessionRepository;
+
+import ru.practical.work.dbone.repository.TicketRepositoryService;
+
 
 import java.util.Optional;
 import java.util.UUID;
@@ -21,11 +24,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class TicketServiceImpl {
 
     private final SessionRepository sessionRepository;
     private final KafkaProducerService kafkaProducerService;
-    private final TicketRepository ticketRepository;
+    private final TicketRepositoryService ticketRepository;
     @Value("${kafka.topic.session}")
     private String ticketKafkaTopic;
 
@@ -35,15 +39,17 @@ public class TicketServiceImpl {
         Optional<Ticket> optionalTicket = ticketRepository.findFirstByStateOrderByNumberAsc(State.WAITING);
         if (optionalTicket.isPresent()) {
             Ticket ticket = optionalTicket.get();
-            Session session = ticket.getSession();
             if (ticket.getState() == State.WAITING) {
-               if (session != null && session.getSessionStatus() == SessionStatus.FREE) {
+                Session session = sessionRepository.findFirstBySessionStatus(SessionStatus.FREE).orElse(null);
+                if (session != null) {
                     ticket.setState(State.CALLING);
                     session.setSessionStatus(SessionStatus.CALL);
                     ticketRepository.save(ticket);
+                    ticket.setSession(session);
+                    session.setTicket(ticket);
                     return ticket;
                 } else {
-                    throw new BadRequestException("Session is not FREE");
+                    throw new BadRequestException("No available sessions");
                 }
             } else {
                 throw new BadRequestException("Ticket is not WAITING");

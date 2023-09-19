@@ -7,13 +7,14 @@ import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practical.work.entity.Ticket;
+import ru.practical.work.dbone.entity.Ticket;
 import ru.practical.work.kafka.KafkaProducerService;
 import ru.practical.work.mapper.TicketMapper;
 import ru.practical.work.proto.RegisterTicketRequest;
 import ru.practical.work.proto.RegisterTicketResponse;
 import ru.practical.work.proto.RegistrationServiceGrpc;
-import ru.practical.work.repository.TicketRepository;
+import ru.practical.work.dbone.repository.TicketRepositoryService;
+
 
 @Component
 @Slf4j
@@ -21,7 +22,7 @@ import ru.practical.work.repository.TicketRepository;
 @RequiredArgsConstructor
 public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServiceImplBase {
 
-    private final TicketRepository ticketRepository;
+    private final TicketRepositoryService ticketRepository;
 
     private final TicketMapper ticketMapper;
 
