@@ -23,6 +23,7 @@ import java.util.UUID;
 @Table(name = "TICKET")
 public class Ticket {
     @Id
+    @Column(name = "number")
     private UUID number;
     @Column(name = "registration_date")
     @JsonSerialize(converter = LocalDateTimeSerializer.class)

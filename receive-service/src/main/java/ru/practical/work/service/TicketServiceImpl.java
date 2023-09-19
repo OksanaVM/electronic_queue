@@ -8,12 +8,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practical.work.dbone.entity.Ticket;
+import ru.practical.work.dbone.entity.TicketHistory;
+import ru.practical.work.dbone.repository.TicketHistoryRepository;
+import ru.practical.work.dbone.repository.TicketRepository;
 import ru.practical.work.kafka.KafkaProducerService;
 import ru.practical.work.mapper.TicketMapper;
 import ru.practical.work.proto.RegisterTicketRequest;
 import ru.practical.work.proto.RegisterTicketResponse;
 import ru.practical.work.proto.RegistrationServiceGrpc;
-import ru.practical.work.dbone.repository.TicketRepositoryService;
+
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Component
@@ -22,9 +28,11 @@ import ru.practical.work.dbone.repository.TicketRepositoryService;
 @RequiredArgsConstructor
 public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServiceImplBase {
 
-    private final TicketRepositoryService ticketRepository;
+    private final TicketRepository ticketRepository;
 
     private final TicketMapper ticketMapper;
+
+    private final TicketHistoryRepository ticketHistoryRepository;
 
     private final KafkaProducerService kafkaProducerService;
 
@@ -32,12 +40,13 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
     private String ticketKafkaTopic;
 
 
-    @Transactional
+    @Transactional("dboneTransactionManager")
     @Override
     public void registerTicket(RegisterTicketRequest request,
                                StreamObserver<RegisterTicketResponse> responseObserver) {
         log.info("registerTicket");
         Ticket ticket = ticketMapper.transformToEntityRequest(request);
+        saveVersion(ticket);
         ticketRepository.save(ticket);
         log.info("kafkaProducerService");
         kafkaProducerService.sendMessage(ticketKafkaTopic, ticket);
@@ -46,6 +55,12 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
         log.info("transformToResponse(ticket)");
         responseObserver.onNext(registerTicketResponse);
         responseObserver.onCompleted();
+    }
+
+    public void saveVersion(Ticket ticket) {
+        TicketHistory ticketHistory = new TicketHistory(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
+                LocalDateTime.now());
+        ticketHistoryRepository.save(ticketHistory);
     }
 
 }

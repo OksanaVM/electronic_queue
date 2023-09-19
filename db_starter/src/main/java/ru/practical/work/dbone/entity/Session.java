@@ -21,6 +21,7 @@ import java.util.UUID;
 @Table(name = "SESSION")
 public class Session {
     @Id
+    @Column(name = "id")
     private UUID id;
     @Column(name = "start_date")
     @JsonSerialize(converter = LocalDateTimeSerializer.class)

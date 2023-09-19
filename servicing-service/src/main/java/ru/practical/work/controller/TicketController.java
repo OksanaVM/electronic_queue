@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practical.work.dbtwo.entity.OldTicket;
 import ru.practical.work.dto.TicketDto;
 import ru.practical.work.dto.TicketDtoMapper;
 import ru.practical.work.dbone.entity.Ticket;
@@ -40,5 +41,11 @@ public class TicketController {
     public ResponseEntity<TicketDto> endService(@RequestParam UUID ticketId) {
         Ticket ticket = ticketService.endServicing(ticketId);
         return ResponseEntity.status(HttpStatus.OK).body(ticketDtoMapper.toDtoTicket(ticket));
+    }
+
+    @PostMapping("/old")
+    public ResponseEntity<OldTicket> oldTicket(@RequestParam UUID ticketId) {
+         ticketService.oldTicketSave(ticketId);
+        return ResponseEntity.status(HttpStatus.OK).body(new OldTicket());
     }
 }

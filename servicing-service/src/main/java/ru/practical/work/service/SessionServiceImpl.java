@@ -26,7 +26,7 @@ public class SessionServiceImpl {
     private String ticketKafkaTopic;
 
 
-    @Transactional
+    @Transactional("dboneTransactionManager")
     public Session createNewSession() {
         Session session = new Session(UUID.randomUUID(), LocalDateTime.now(), SessionStatus.FREE);
         return saveSession(session);

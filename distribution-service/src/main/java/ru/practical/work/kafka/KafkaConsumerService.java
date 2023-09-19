@@ -9,19 +9,27 @@ import org.springframework.stereotype.Service;
 
 import ru.practical.work.dbone.entity.Session;
 import ru.practical.work.dbone.entity.Ticket;
+import ru.practical.work.dbone.entity.TicketHistory;
 import ru.practical.work.dbone.entity.enums.SessionStatus;
 import ru.practical.work.dbone.entity.enums.State;
 import ru.practical.work.dbone.repository.SessionRepository;
 
-import ru.practical.work.dbone.repository.TicketRepositoryService;
+import ru.practical.work.dbone.repository.TicketHistoryRepository;
+import ru.practical.work.dbone.repository.TicketRepository;
+
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @RequiredArgsConstructor
 @Slf4j
 @Service
 public class KafkaConsumerService {
-    private final TicketRepositoryService ticketRepository;
+    private final TicketRepository ticketRepository;
     private final SessionRepository sessionRepository;
+
+    private final TicketHistoryRepository ticketHistoryRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
@@ -36,6 +44,7 @@ public class KafkaConsumerService {
                     sessionRepository.save(callSession);
                     ticket.setSession(callSession);
                     ticket.setState(State.CALLING);
+                    saveVersion(ticket);
                     ticketRepository.save(ticket);
                 });
     }
@@ -49,6 +58,7 @@ public class KafkaConsumerService {
                 .ifPresent(callTicket -> {
                     callTicket.setState(State.CALLING);
                     callTicket.setSession(session);
+                    saveVersion(callTicket);
                     ticketRepository.save(callTicket);
                     session.setTicket(callTicket);
                     session.setSessionStatus(SessionStatus.CALL);
@@ -72,5 +82,11 @@ public class KafkaConsumerService {
             log.error("Can not pars session: " + message);
             throw new RuntimeException(e);
         }
+    }
+
+    public void saveVersion(Ticket ticket) {
+        TicketHistory ticketHistory = new TicketHistory(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
+                LocalDateTime.now());
+        ticketHistoryRepository.save(ticketHistory);
     }
 }

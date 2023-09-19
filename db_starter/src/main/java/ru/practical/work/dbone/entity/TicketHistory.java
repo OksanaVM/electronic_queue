@@ -15,9 +15,10 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
-@Table(name = "ticket_version")
-public class TicketVersion {
+@Table(name = "ticket_history")
+public class TicketHistory {
     @Id
+    @Column(name = "version")
     private UUID version;
     @Column(name = "ticket_number")
     private UUID ticketNumber;

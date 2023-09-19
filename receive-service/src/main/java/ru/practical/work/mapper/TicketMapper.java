@@ -22,8 +22,6 @@ public class TicketMapper {
     }
 
     public RegisterTicketResponse transformToResponse(Ticket ticket) {
-//        ZonedDateTime zdt = ZonedDateTime.of(ticket.getRegistrationDate(), ZoneId.systemDefault());
-//        long date = zdt.toInstant().toEpochMilli();
         return RegisterTicketResponse.newBuilder()
                 .setNumber(ticket.getNumber().toString())
                 .setRegistrationTime(ticket.getRegistrationDate().toString())

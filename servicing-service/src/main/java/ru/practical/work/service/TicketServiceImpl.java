@@ -8,16 +8,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practical.work.dbone.entity.Session;
 import ru.practical.work.dbone.entity.Ticket;
+import ru.practical.work.dbone.entity.TicketHistory;
 import ru.practical.work.dbone.entity.enums.SessionStatus;
 import ru.practical.work.dbone.entity.enums.State;
+import ru.practical.work.dbone.repository.TicketHistoryRepository;
+import ru.practical.work.dbone.repository.TicketRepository;
+import ru.practical.work.dbtwo.entity.OldTicket;
+import ru.practical.work.dbtwo.repository.OldTicketRepository;
 import ru.practical.work.exeption.BadRequestException;
 import ru.practical.work.exeption.NotFoundException;
 import ru.practical.work.kafka.KafkaProducerService;
 import ru.practical.work.dbone.repository.SessionRepository;
 
-import ru.practical.work.dbone.repository.TicketRepositoryService;
 
 
+
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,12 +35,16 @@ public class TicketServiceImpl {
 
     private final SessionRepository sessionRepository;
     private final KafkaProducerService kafkaProducerService;
-    private final TicketRepositoryService ticketRepository;
+    private final TicketRepository ticketRepository;
+
+    private final TicketHistoryRepository ticketHistoryRepository;
+
+    private final OldTicketRepository oldTicketRepository;
     @Value("${kafka.topic.session}")
     private String ticketKafkaTopic;
 
 
-    @Transactional
+    @Transactional("dboneTransactionManager")
     public Ticket callTicket() {
         Optional<Ticket> optionalTicket = ticketRepository.findFirstByStateOrderByNumberAsc(State.WAITING);
         if (optionalTicket.isPresent()) {
@@ -44,6 +54,7 @@ public class TicketServiceImpl {
                 if (session != null) {
                     ticket.setState(State.CALLING);
                     session.setSessionStatus(SessionStatus.CALL);
+                    saveVersion(ticket);
                     ticketRepository.save(ticket);
                     ticket.setSession(session);
                     session.setTicket(ticket);
@@ -60,7 +71,7 @@ public class TicketServiceImpl {
     }
 
 
-    @Transactional
+    @Transactional("dboneTransactionManager")
     public Ticket setNewStatus(UUID id) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Ticket not found for id: " + id));
@@ -76,11 +87,12 @@ public class TicketServiceImpl {
         session.setSessionStatus(SessionStatus.SERVICE);
         sessionRepository.save(session);
         ticket.setState(State.SERVICING);
+        saveVersion(ticket);
         ticketRepository.save(ticket);
         return ticket;
     }
 
-    @Transactional
+    @Transactional("dboneTransactionManager")
     public Ticket endServicing(UUID id) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Ticket not found for id: " + id));
@@ -97,9 +109,28 @@ public class TicketServiceImpl {
         session.setSessionStatus(SessionStatus.FREE);
         sessionRepository.save(session);
         ticket.setState(State.SERVICED);
+        saveVersion(ticket);
         ticketRepository.save(ticket);
+        oldTicketSave(ticket.getNumber());
+        ticketRepository.deleteById(ticket.getNumber());
         kafkaProducerService.sendMessage(ticketKafkaTopic, session);
         return ticket;
     }
 
+    @Transactional("dbtwoTransactionManager")
+    public void oldTicketSave(UUID id) {
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Ticket not found for id: " + id));
+        if (ticket.getState() == State.SERVICED) {
+            OldTicket oldTicket =  new OldTicket(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
+                    LocalDateTime.now());
+            oldTicketRepository.save(oldTicket);
+        }
+    }
+
+    public void saveVersion(Ticket ticket) {
+        TicketHistory ticketHistory = new TicketHistory(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
+                LocalDateTime.now());
+        ticketHistoryRepository.save(ticketHistory);
+    }
 }
