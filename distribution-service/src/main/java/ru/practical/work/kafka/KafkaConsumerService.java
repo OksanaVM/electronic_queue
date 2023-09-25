@@ -15,6 +15,7 @@ import ru.practical.work.dbone.repository.SessionRepository;
 import ru.practical.work.dbone.repository.TicketHistoryRepository;
 import ru.practical.work.dbone.repository.TicketRepository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -32,8 +33,10 @@ public class KafkaConsumerService {
 
     @KafkaListener(topics = "ticket", groupId = "my-group")
     public void listenTicket(String message) {
+        Instant timestamp = Instant.now();
         log.info("Received ticket: " + message);
         Ticket ticket = convertJsonToTicket(message);
+        Instant timestamp2 = Instant.now();
 
         sessionRepository.findFirstBySessionStatus(SessionStatus.FREE)
                 .ifPresent(callSession -> {
@@ -44,6 +47,8 @@ public class KafkaConsumerService {
                     saveTicketHistory(ticket);
                     ticketRepository.save(ticket);
                 });
+        System.out.println(timestamp);
+        System.out.println(timestamp2);
     }
 
     @KafkaListener(topics = "queue-distribution-topic", groupId = "my-group")

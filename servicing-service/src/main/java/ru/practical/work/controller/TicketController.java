@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practical.work.dbone.entity.Ticket;
-import ru.practical.work.dbtwo.entity.OldTicket;
 import ru.practical.work.dto.TicketDto;
 import ru.practical.work.dto.TicketDtoMapper;
 import ru.practical.work.service.TicketServiceImpl;
@@ -43,9 +42,4 @@ public class TicketController {
         return ResponseEntity.status(HttpStatus.OK).body(ticketDtoMapper.toDtoTicket(ticket));
     }
 
-    @PostMapping("/old")
-    public ResponseEntity<OldTicket> oldTicket(@RequestParam UUID ticketId) {
-        ticketService.oldTicketSave(ticketId);
-        return ResponseEntity.status(HttpStatus.OK).body(new OldTicket());
-    }
 }

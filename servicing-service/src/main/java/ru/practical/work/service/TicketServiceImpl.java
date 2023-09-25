@@ -15,12 +15,15 @@ import ru.practical.work.dbone.repository.SessionRepository;
 import ru.practical.work.dbone.repository.TicketHistoryRepository;
 import ru.practical.work.dbone.repository.TicketRepository;
 import ru.practical.work.dbtwo.entity.OldTicket;
+import ru.practical.work.dbtwo.entity.OldTicketHistory;
+import ru.practical.work.dbtwo.repository.OldTicketHistoryRepository;
 import ru.practical.work.dbtwo.repository.OldTicketRepository;
 import ru.practical.work.exeption.BadRequestException;
 import ru.practical.work.exeption.NotFoundException;
 import ru.practical.work.kafka.KafkaProducerService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,6 +40,9 @@ public class TicketServiceImpl {
     private final TicketHistoryRepository ticketHistoryRepository;
 
     private final OldTicketRepository oldTicketRepository;
+
+    private final OldTicketHistoryRepository oldTicketHistoryRepository;
+
     @Value("${kafka.topic.session}")
     private String ticketKafkaTopic;
 
@@ -92,7 +98,7 @@ public class TicketServiceImpl {
     @Transactional("dboneTransactionManager")
     public Ticket endServicing(UUID id) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Ticket not found for id: " + id));
+                .orElseThrow(() -> new NotFoundException("Ticket not found for id(end): " + id));
 
         if (ticket.getState() != State.SERVICING) {
             throw new BadRequestException("Ticket is not in SERVICING state");
@@ -105,19 +111,21 @@ public class TicketServiceImpl {
         ticket.setSession(null);
         session.setSessionStatus(SessionStatus.FREE);
         sessionRepository.save(session);
+
         ticket.setState(State.SERVICED);
         saveTicketHistory(ticket);
-        ticketRepository.save(ticket);
-        oldTicketSave(ticket.getNumber());
+        saveOldTicket(ticket.getNumber());
+        saveOldTicketHistory(ticket.getNumber());
         ticketRepository.deleteById(ticket.getNumber());
+//        ticketHistoryRepository.deleteById(ticket.getNumber());
         kafkaProducerService.sendMessage(ticketKafkaTopic, session);
         return ticket;
     }
 
-    @Transactional("dbtwoTransactionManager")
-    public void oldTicketSave(UUID id) {
+
+    private void saveOldTicket(UUID id) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Ticket not found for id: " + id));
+                .orElseThrow(() -> new NotFoundException("Ticket not found for id(saveOLd): " + id));
         if (ticket.getState() == State.SERVICED) {
             OldTicket oldTicket = new OldTicket(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
                     LocalDateTime.now());
@@ -126,9 +134,30 @@ public class TicketServiceImpl {
     }
 
 
+    private void saveOldTicketHistory(UUID id) {
+        List<TicketHistory> ticketHistoryList = ticketHistoryRepository.findByTicketNumber(id);
+        if (ticketHistoryList.isEmpty()) {
+            throw new NotFoundException("Ticket history not found for id: " + id);
+        }
+        for (TicketHistory history : ticketHistoryList) {
+            moveTicketHistoryToOld(history);
+        }
+    }
+
     private void saveTicketHistory(Ticket ticket) {
         TicketHistory ticketHistory = new TicketHistory(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
                 LocalDateTime.now());
         ticketHistoryRepository.save(ticketHistory);
     }
+
+
+    private void moveTicketHistoryToOld(TicketHistory ticketHistory) {
+        OldTicketHistory oldTicketHistory = new OldTicketHistory(UUID.randomUUID(),
+                ticketHistory.getTicketNumber(), ticketHistory.getTicketState(), LocalDateTime.now());
+
+        oldTicketHistoryRepository.save(oldTicketHistory);
+        ticketHistoryRepository.delete(ticketHistory);
+    }
+
+
 }

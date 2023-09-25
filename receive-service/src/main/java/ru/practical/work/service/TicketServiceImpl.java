@@ -18,6 +18,7 @@ import ru.practical.work.proto.RegisterTicketResponse;
 import ru.practical.work.proto.RegistrationServiceGrpc;
 
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -49,17 +50,23 @@ public class TicketServiceImpl extends RegistrationServiceGrpc.RegistrationServi
         saveTicketHistory(ticket);
         ticketRepository.save(ticket);
         log.info("kafkaProducerService");
+        Instant timestamp = Instant.now();
         kafkaProducerService.sendMessage(ticketKafkaTopic, ticket);
         log.info("sendMessage");
+        Instant timestamp2 = Instant.now();
         RegisterTicketResponse registerTicketResponse = ticketMapper.transformToResponse(ticket);
         log.info("transformToResponse(ticket)");
         responseObserver.onNext(registerTicketResponse);
         responseObserver.onCompleted();
+        System.out.println(timestamp);
+        System.out.println(timestamp2);
     }
 
     private void saveTicketHistory(Ticket ticket) {
         TicketHistory ticketHistory = new TicketHistory(UUID.randomUUID(), ticket.getNumber(), ticket.getState(),
                 LocalDateTime.now());
+        Instant timestamp = Instant.now();
+        System.out.println(timestamp);
         ticketHistoryRepository.save(ticketHistory);
     }
 
